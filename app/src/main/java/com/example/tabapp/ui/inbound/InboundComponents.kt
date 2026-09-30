@@ -14,6 +14,13 @@ import androidx.compose.ui.unit.dp
 import com.example.tabapp.data.inbound.OrderStatus
 import com.example.tabapp.ui.theme.SuccessGreen
 import com.example.tabapp.ui.theme.WarningOrange
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+private val DisplayDateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+
+/** 화면 표시용 날짜 형식 (예: 2026.09.30) */
+fun LocalDate.display(): String = format(DisplayDateFormat)
 
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier = Modifier) {
@@ -44,9 +51,10 @@ fun StatusBadge(status: OrderStatus) {
         Text(
             text = status.label,
             color = fg,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }
