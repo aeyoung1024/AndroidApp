@@ -58,12 +58,12 @@ fun FeatureScaffold(
 fun FeatureScreen(feature: Feature, onBack: () -> Unit) {
     FeatureScaffold(feature = feature, onBack = onBack) {
         when (feature) {
-            Feature.FEATURE_1 -> Feature1Screen()
-            Feature.FEATURE_2 -> Feature2Screen()
-            Feature.FEATURE_3 -> Feature3Screen()
-            Feature.FEATURE_4 -> Feature4Screen()
-            Feature.FEATURE_5 -> Feature5Screen()
-            Feature.FEATURE_6 -> Feature6Screen()
+            Feature.INBOUND -> InboundScreen()
+            Feature.ISSUE -> IssueScreen()
+            Feature.TRANSFER -> TransferScreen()
+            Feature.EXTERNAL_OUT -> ExternalOutScreen()
+            Feature.INVENTORY -> InventoryScreen()
+            Feature.SYNC -> SyncScreen()
         }
     }
 }

@@ -1,12 +1,12 @@
 package com.example.tabapp.data
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -21,10 +21,10 @@ enum class Feature(
     val icon: ImageVector,
     val color: Color,
 ) {
-    FEATURE_1("feature1", "기능 1", "첫 번째 기능 설명", Icons.AutoMirrored.Filled.List, Color(0xFF1E88E5)),
-    FEATURE_2("feature2", "기능 2", "두 번째 기능 설명", Icons.Filled.Search, Color(0xFF43A047)),
-    FEATURE_3("feature3", "기능 3", "세 번째 기능 설명", Icons.Filled.DateRange, Color(0xFFFB8C00)),
-    FEATURE_4("feature4", "기능 4", "네 번째 기능 설명", Icons.Filled.Person, Color(0xFF8E24AA)),
-    FEATURE_5("feature5", "기능 5", "다섯 번째 기능 설명", Icons.Filled.Info, Color(0xFF00897B)),
-    FEATURE_6("feature6", "기능 6", "여섯 번째 기능 설명", Icons.Filled.Settings, Color(0xFF546E7A)),
+    INBOUND("inbound", "입고", "자재 입고 등록", Icons.Filled.AddCircle, Color(0xFF1E88E5)),
+    ISSUE("issue", "불출", "자재 불출 처리", Icons.Filled.ShoppingCart, Color(0xFFFB8C00)),
+    TRANSFER("transfer", "이동", "창고·위치 간 자재 이동", Icons.AutoMirrored.Filled.ArrowForward, Color(0xFF43A047)),
+    EXTERNAL_OUT("external_out", "사외반출", "회사 외부로 자재 반출", Icons.AutoMirrored.Filled.Send, Color(0xFFE53935)),
+    INVENTORY("inventory", "재고현황", "현재 재고 조회", Icons.AutoMirrored.Filled.List, Color(0xFF00897B)),
+    SYNC("sync", "동기화", "서버와 데이터 동기화", Icons.Filled.Refresh, Color(0xFF546E7A)),
 }
