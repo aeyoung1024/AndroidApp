@@ -1,5 +1,6 @@
 package com.example.tabapp.ui.login
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +31,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,10 +43,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -53,8 +56,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.tabapp.ui.theme.Navy
-import com.example.tabapp.ui.theme.NavyDark
+import com.example.tabapp.ui.components.LightSystemBarIcons
+import com.example.tabapp.ui.components.SaitLogo
+import com.example.tabapp.ui.theme.SamsungBlue
+import com.example.tabapp.ui.theme.SamsungBlueBright
+import com.example.tabapp.ui.theme.SamsungBlueDeep
 import com.example.tabapp.ui.theme.TabAppTheme
 import com.example.tabapp.ui.theme.isLandscape
 
@@ -87,188 +93,258 @@ private fun LoginContent(
     onPasswordChange: (String) -> Unit,
     onLogin: () -> Unit,
 ) {
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    LightSystemBarIcons()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.linearGradient(listOf(SamsungBlueDeep, SamsungBlue, SamsungBlueBright))),
+    ) {
+        BackgroundDecoration()
+
         if (isLandscape()) {
-            // 가로: 왼쪽 브랜드 영역 + 오른쪽 로그인 폼
-            Row(modifier = Modifier.fillMaxSize()) {
-                BrandPanel(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                )
-                LoginForm(
-                    state = state,
-                    onIdChange = onIdChange,
-                    onPasswordChange = onPasswordChange,
-                    onLogin = onLogin,
+            // 가로: 왼쪽 브랜드 문구 / 오른쪽 로그인 카드
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
+            ) {
+                BrandSection(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .systemBarsPadding()
-                        .imePadding(),
+                        .padding(horizontal = 64.dp),
                 )
+                CenteredScroll(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                ) {
+                    LoginCard(state, onIdChange, onPasswordChange, onLogin)
+                }
             }
         } else {
-            // 세로: 위쪽 브랜드 영역 + 아래 로그인 폼
-            Column(modifier = Modifier.fillMaxSize()) {
-                BrandPanel(
+            // 세로: 위 브랜드 문구 / 아래 로그인 카드
+            CenteredScroll(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
+            ) {
+                BrandSection(
                     modifier = Modifier
+                        .widthIn(max = 520.dp)
                         .fillMaxWidth()
-                        .weight(0.35f),
+                        .padding(horizontal = 24.dp),
                 )
-                LoginForm(
-                    state = state,
-                    onIdChange = onIdChange,
-                    onPasswordChange = onPasswordChange,
-                    onLogin = onLogin,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.65f)
-                        .systemBarsPadding()
-                        .imePadding(),
-                )
+                Spacer(Modifier.height(40.dp))
+                LoginCard(state, onIdChange, onPasswordChange, onLogin)
             }
         }
+
+        Text(
+            text = "v1.0.0",
+            color = Color.White.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .safeDrawingPadding()
+                .padding(start = 24.dp, bottom = 16.dp),
+        )
     }
 }
 
+/** 화면이 작거나 키보드가 올라와도 스크롤되며, 공간이 충분하면 가운데 정렬 */
 @Composable
-private fun BrandPanel(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(Brush.linearGradient(listOf(Navy, NavyDark))),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Lock,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(72.dp),
-            )
-            Spacer(Modifier.height(16.dp))
-            Text("TabApp", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text("업무용 태블릿 애플리케이션", color = Color.White.copy(alpha = 0.8f), fontSize = 18.sp)
-        }
-    }
-}
-
-@Composable
-private fun LoginForm(
-    state: LoginUiState,
-    onIdChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onLogin: () -> Unit,
+private fun CenteredScroll(
     modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-
-    // 키보드가 올라와 공간이 좁아져도 스크롤로 모든 입력란에 접근 가능
-    BoxWithConstraints(modifier = modifier) {
+    BoxWithConstraints(modifier = modifier.imePadding()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .heightIn(min = maxHeight),
+                .heightIn(min = maxHeight)
+                .padding(vertical = 32.dp, horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 480.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    text = "로그인",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "계정 정보를 입력하세요.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            content()
+        }
+    }
+}
 
-                OutlinedTextField(
-                    value = state.id,
-                    onValueChange = onIdChange,
-                    label = { Text("아이디") },
-                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
-                    singleLine = true,
-                    enabled = !state.isLoading,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Next,
-                    ),
+/** 배경의 은은한 원형 장식 */
+@Composable
+private fun BackgroundDecoration() {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        drawCircle(
+            color = Color.White.copy(alpha = 0.06f),
+            radius = h * 0.75f,
+            center = Offset(w * 0.05f, h * 1.05f),
+        )
+        drawCircle(
+            color = Color.White.copy(alpha = 0.05f),
+            radius = h * 0.45f,
+            center = Offset(w * 0.95f, h * -0.05f),
+        )
+    }
+}
+
+@Composable
+private fun BrandSection(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        SaitLogo(height = 36.dp, onDark = true, showSubtitle = true)
+        Spacer(Modifier.height(40.dp))
+        Text(
+            text = "자재관리 시스템",
+            color = Color.White,
+            style = MaterialTheme.typography.displaySmall,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Material Management System",
+            color = Color.White.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = "입고부터 재고 현황까지,\n현장의 모든 자재 흐름을 한 곳에서 관리합니다.",
+            color = Color.White.copy(alpha = 0.85f),
+            style = MaterialTheme.typography.bodyLarge,
+            lineHeight = 26.sp,
+        )
+    }
+}
+
+@Composable
+private fun LoginCard(
+    state: LoginUiState,
+    onIdChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLogin: () -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    val fieldShape = RoundedCornerShape(14.dp)
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+    )
+
+    Surface(
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 24.dp,
+        modifier = Modifier
+            .widthIn(max = 440.dp)
+            .fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 36.dp, vertical = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text("로그인", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = "사내 계정 정보를 입력해 주세요.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+
+            OutlinedTextField(
+                value = state.id,
+                onValueChange = onIdChange,
+                label = { Text("아이디") },
+                leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                singleLine = true,
+                enabled = !state.isLoading,
+                shape = fieldShape,
+                colors = fieldColors,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Next,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = onPasswordChange,
+                label = { Text("비밀번호") },
+                leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+                trailingIcon = {
+                    TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Text(if (passwordVisible) "숨기기" else "보기")
+                    }
+                },
+                singleLine = true,
+                enabled = !state.isLoading,
+                shape = fieldShape,
+                colors = fieldColors,
+                visualTransformation =
+                    if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    onLogin()
+                }),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            if (state.errorMessage != null) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
-                )
-
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = onPasswordChange,
-                    label = { Text("비밀번호") },
-                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
-                    trailingIcon = {
-                        TextButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Text(if (passwordVisible) "숨기기" else "보기")
-                        }
-                    },
-                    singleLine = true,
-                    enabled = !state.isLoading,
-                    visualTransformation =
-                        if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        focusManager.clearFocus()
-                        onLogin()
-                    }),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                if (state.errorMessage != null) {
+                ) {
                     Text(
                         text = state.errorMessage,
-                        color = MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     )
                 }
-
-                Button(
-                    onClick = {
-                        focusManager.clearFocus()
-                        onLogin()
-                    },
-                    enabled = !state.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Text("로그인", fontSize = 18.sp)
-                    }
-                }
-
-                Text(
-                    text = "데모 계정: admin / 1234",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
+
+            Spacer(Modifier.height(4.dp))
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    onLogin()
+                },
+                enabled = !state.isLoading,
+                shape = RoundedCornerShape(50),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            ) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text("로그인", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+
+            Text(
+                text = "데모 계정  admin / 1234",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
     }
 }

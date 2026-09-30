@@ -23,6 +23,22 @@ Galaxy Tab Active3 용 Kotlin + Jetpack Compose 태블릿 앱.
 > 스캐너는 **키보드 입력 방식(HID / 키보드 웨지)** 으로 설정하고, 스캔 후 **Enter 접미사**를 붙이도록 설정하세요.
 > (삼성 Knox Capture 사용 시 "키 입력(Keystroke)" 출력 + Enter 접미사)
 
+## 디자인
+- Samsung Blue(#1428A0) 기반 One UI 스타일: 밝은 회색 배경 + 흰 카드 + 큰 라운드, 다크 모드 지원
+- 로그인: 파란 그라데이션 배경 + SAIT 로고 + 흰색 로그인 카드
+- 메인: SAIT 로고 헤더, 인사말, 기능 타일 6개
+
+### SAIT 공식 로고 넣기
+`app/src/main/res/drawable/` 폴더에 아래 이름으로 로고 파일을 넣으면 코드 수정 없이 자동 적용됩니다.
+(파일이 없으면 "SAIT" 텍스트 로고로 표시)
+
+| 파일명 | 용도 |
+| --- | --- |
+| `sait_logo.png` (또는 .webp / 벡터 .xml) | 밝은 배경용 (메인, 상단바) |
+| `sait_logo_white.png` (선택) | 파란 배경용 (로그인). 없으면 기본 로고를 흰색으로 표시 |
+
+파일명은 영문 소문자·숫자·밑줄(_)만 사용할 수 있습니다.
+
 ## 실행
 Android Studio 에서 이 폴더를 열고 Gradle Sync 후 ▶ Run.
 (최소 Android 8.0 / API 26, 대상 API 35)

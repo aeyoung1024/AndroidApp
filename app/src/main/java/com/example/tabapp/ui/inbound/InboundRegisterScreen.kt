@@ -21,18 +21,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,8 +46,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,10 +73,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.tabapp.data.Feature
 import com.example.tabapp.data.inbound.InboundRecord
 import com.example.tabapp.data.inbound.PurchaseOrder
 import com.example.tabapp.data.inbound.ScanField
+import com.example.tabapp.ui.components.SaitCard
+import com.example.tabapp.ui.components.SaitTopBar
+import com.example.tabapp.ui.theme.SuccessGreen
 import com.example.tabapp.ui.theme.isLandscape
 
 /** 입고 등록 화면: 발주량만큼 생성된 레코드에 입고 위치 / 실린더 번호를 스캔 입력 */
@@ -95,7 +93,6 @@ fun InboundRegisterScreen(
     val focusManager = LocalFocusManager.current
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSaveDialog by rememberSaveable { mutableStateOf(false) }
-    val accent = Feature.INBOUND.color
 
     val requestBack: () -> Unit = {
         if (state.isDirty) showExitDialog = true else onBack()
@@ -117,24 +114,12 @@ fun InboundRegisterScreen(
 
     Scaffold(
         modifier = Modifier.imePadding(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (state.readOnly) "입고 내역" else "입고 등록",
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = requestBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = accent,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                ),
+            SaitTopBar(
+                title = if (state.readOnly) "입고 내역" else "입고 등록",
+                subtitle = state.order?.let { "${it.orderNo} · ${it.supplier}" },
+                onBack = requestBack,
             )
         },
         bottomBar = {
@@ -269,7 +254,7 @@ private fun OrderInfoPanel(
         "상태" to order.status.label,
     )
 
-    Card(modifier = modifier) {
+    SaitCard(modifier = modifier) {
         Column(
             modifier = Modifier
                 .padding(20.dp)
@@ -282,7 +267,7 @@ private fun OrderInfoPanel(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             if (landscape) {
                 items.forEach { (label, value) -> InfoItem(label, value) }
@@ -295,7 +280,7 @@ private fun OrderInfoPanel(
             }
 
             if (!readOnly) {
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("입고 위치 동일 적용", style = MaterialTheme.typography.titleSmall)
@@ -336,7 +321,7 @@ private fun RecordTable(
         if (!fullyVisible) listState.animateScrollToItem((activeRow - 2).coerceAtLeast(0))
     }
 
-    Card(modifier = modifier) {
+    SaitCard(modifier = modifier) {
         Column {
             Row(
                 modifier = Modifier
@@ -350,7 +335,7 @@ private fun RecordTable(
                 Spacer(Modifier.width(STATUS_WIDTH))
                 if (!state.readOnly) Spacer(Modifier.width(CLEAR_WIDTH))
             }
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(state.records, key = { _, record -> record.seq }) { index, record ->
                     RecordRow(
@@ -363,7 +348,7 @@ private fun RecordTable(
                         onFocus = { field -> viewModel.onFocus(index, field) },
                         onClear = { viewModel.clearRow(index) },
                     )
-                    HorizontalDivider()
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
         }
@@ -394,7 +379,7 @@ private fun RecordRow(
     onClear: () -> Unit,
 ) {
     val background =
-        if (activeField != null) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
+        if (activeField != null) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f) else Color.Transparent
 
     Row(
         modifier = Modifier
@@ -442,7 +427,7 @@ private fun RecordRow(
                 record.isComplete -> Icon(
                     Icons.Filled.CheckCircle,
                     contentDescription = "입력 완료",
-                    tint = Color(0xFF43A047),
+                    tint = SuccessGreen,
                 )
             }
         }
@@ -553,7 +538,7 @@ private fun SaveBar(
             Button(
                 onClick = onSave,
                 enabled = canSave && !isSaving,
-                colors = ButtonDefaults.buttonColors(containerColor = Feature.INBOUND.color),
+                shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .height(56.dp)
                     .widthIn(min = 160.dp),

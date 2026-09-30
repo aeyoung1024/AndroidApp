@@ -1,8 +1,9 @@
 package com.example.tabapp.ui.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -10,41 +11,42 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.tabapp.data.Feature
+import com.example.tabapp.ui.components.SaitCard
+import com.example.tabapp.ui.components.SaitLogo
 import com.example.tabapp.ui.theme.TabAppTheme
 import com.example.tabapp.ui.theme.isLandscape
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     userName: String,
@@ -52,37 +54,29 @@ fun MainScreen(
     onLogout: () -> Unit,
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    val landscape = isLandscape()
+    val horizontalPadding = if (landscape) 40.dp else 32.dp
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("메인 메뉴", fontWeight = FontWeight.Bold) },
-                actions = {
-                    Text(
-                        text = "$userName 님",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(end = 8.dp),
-                    )
-                    IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "로그아웃")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .padding(horizontal = horizontalPadding),
+        ) {
+            Header(userName = userName, onLogoutClick = { showLogoutDialog = true })
+            Greeting(userName = userName)
+
+            // 가로: 3열 x 2행, 세로: 2열 x 3행 (스크롤 없이 한 화면)
+            FeatureGrid(
+                features = Feature.entries,
+                columns = if (landscape) 3 else 2,
+                onFeatureClick = onFeatureClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(bottom = 32.dp),
             )
-        },
-    ) { innerPadding ->
-        // 가로: 3열 x 2행, 세로: 2열 x 3행
-        val columns = if (isLandscape()) 3 else 2
-        FeatureGrid(
-            features = Feature.entries,
-            columns = columns,
-            onFeatureClick = onFeatureClick,
-            contentPadding = innerPadding,
-        )
+        }
     }
 
     if (showLogoutDialog) {
@@ -103,23 +97,93 @@ fun MainScreen(
     }
 }
 
-/**
- * 버튼들이 화면을 가득 채우도록 행/열에 weight 를 나눠 배치합니다.
- * 스크롤 없이 6개 버튼이 한 화면에 모두 보입니다.
- */
+@Composable
+private fun Header(userName: String, onLogoutClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SaitLogo(height = 22.dp)
+        VerticalDivider(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .height(20.dp),
+            color = MaterialTheme.colorScheme.outline,
+        )
+        Text(
+            text = "자재관리 시스템",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        // 사용자 정보 + 로그아웃
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = userName.take(1).uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = "$userName 님",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.width(20.dp))
+        OutlinedButton(
+            onClick = onLogoutClick,
+            shape = RoundedCornerShape(50),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text("로그아웃")
+        }
+    }
+}
+
+@Composable
+private fun Greeting(userName: String) {
+    val today = remember {
+        LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE", Locale.KOREAN))
+    }
+    Column(modifier = Modifier.padding(top = 12.dp, bottom = 28.dp)) {
+        Text(
+            text = "안녕하세요, ${userName}님",
+            style = MaterialTheme.typography.headlineLarge,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "$today  ·  작업할 메뉴를 선택하세요.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** 버튼들이 남은 공간을 가득 채우도록 행/열에 weight 를 나눠 배치 */
 @Composable
 private fun FeatureGrid(
     features: List<Feature>,
     columns: Int,
     onFeatureClick: (Feature) -> Unit,
-    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
 ) {
     val spacing = 20.dp
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(spacing),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing),
     ) {
         features.chunked(columns).forEach { rowItems ->
@@ -130,7 +194,7 @@ private fun FeatureGrid(
                 horizontalArrangement = Arrangement.spacedBy(spacing),
             ) {
                 rowItems.forEach { feature ->
-                    FeatureButton(
+                    FeatureTile(
                         feature = feature,
                         onClick = { onFeatureClick(feature) },
                         modifier = Modifier
@@ -138,7 +202,6 @@ private fun FeatureGrid(
                             .fillMaxHeight(),
                     )
                 }
-                // 마지막 줄이 비는 경우 자리 맞춤
                 repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
             }
         }
@@ -146,50 +209,64 @@ private fun FeatureGrid(
 }
 
 @Composable
-private fun FeatureButton(
+private fun FeatureTile(
     feature: Feature,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = feature.color),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-    ) {
+    SaitCard(onClick = onClick, modifier = modifier, cornerRadius = 28.dp) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+                .padding(28.dp),
         ) {
-            Icon(
-                imageVector = feature.icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(64.dp),
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = feature.title,
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = feature.description,
-                color = Color.White.copy(alpha = 0.85f),
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // 기능 아이콘 (연한 색 배경의 라운드 사각형)
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .background(feature.color.copy(alpha = 0.12f), RoundedCornerShape(18.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = feature.icon,
+                    contentDescription = null,
+                    tint = feature.color,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            Row(verticalAlignment = Alignment.Bottom) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = feature.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = feature.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainer, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }

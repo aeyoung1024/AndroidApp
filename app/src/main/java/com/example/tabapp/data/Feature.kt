@@ -21,10 +21,10 @@ enum class Feature(
     val icon: ImageVector,
     val color: Color,
 ) {
-    INBOUND("inbound", "입고", "자재 입고 등록", Icons.Filled.AddCircle, Color(0xFF1E88E5)),
-    ISSUE("issue", "불출", "자재 불출 처리", Icons.Filled.ShoppingCart, Color(0xFFFB8C00)),
-    TRANSFER("transfer", "이동", "창고·위치 간 자재 이동", Icons.AutoMirrored.Filled.ArrowForward, Color(0xFF43A047)),
-    EXTERNAL_OUT("external_out", "사외반출", "회사 외부로 자재 반출", Icons.AutoMirrored.Filled.Send, Color(0xFFE53935)),
-    INVENTORY("inventory", "재고현황", "현재 재고 조회", Icons.AutoMirrored.Filled.List, Color(0xFF00897B)),
-    SYNC("sync", "동기화", "서버와 데이터 동기화", Icons.Filled.Refresh, Color(0xFF546E7A)),
+    INBOUND("inbound", "입고", "자재 입고 등록", Icons.Filled.AddCircle, Color(0xFF2B59E8)),
+    ISSUE("issue", "불출", "자재 불출 처리", Icons.Filled.ShoppingCart, Color(0xFFF07B14)),
+    TRANSFER("transfer", "이동", "창고·위치 간 자재 이동", Icons.AutoMirrored.Filled.ArrowForward, Color(0xFF14A38B)),
+    EXTERNAL_OUT("external_out", "사외반출", "회사 외부로 자재 반출", Icons.AutoMirrored.Filled.Send, Color(0xFFE5484D)),
+    INVENTORY("inventory", "재고현황", "현재 재고 조회", Icons.AutoMirrored.Filled.List, Color(0xFF7C4DDB)),
+    SYNC("sync", "동기화", "서버와 데이터 동기화", Icons.Filled.Refresh, Color(0xFF0E98C9)),
 }

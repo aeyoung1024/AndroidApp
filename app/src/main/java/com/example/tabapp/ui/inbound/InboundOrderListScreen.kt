@@ -12,17 +12,19 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -42,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.tabapp.data.inbound.InboundRepository
 import com.example.tabapp.data.inbound.OrderStatus
 import com.example.tabapp.data.inbound.PurchaseOrder
+import com.example.tabapp.ui.components.SaitCard
 import java.time.LocalDate
 
 /** 발주 리스트 조회 기간 (발주일 기준) */
@@ -94,13 +97,13 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 24.dp),
     ) {
         // 상단: 조회 기간 선택
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -115,6 +118,13 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
                         selected = period == p,
                         onClick = { period = p },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = OrderPeriod.entries.size),
+                        colors = SegmentedButtonDefaults.colors(
+                            activeContainerColor = MaterialTheme.colorScheme.primary,
+                            activeContentColor = MaterialTheme.colorScheme.onPrimary,
+                            inactiveContainerColor = MaterialTheme.colorScheme.surface,
+                            activeBorderColor = MaterialTheme.colorScheme.primary,
+                            inactiveBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        ),
                     ) {
                         Text(p.label)
                     }
@@ -147,6 +157,12 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
                     }
                 },
                 singleLine = true,
+                shape = RoundedCornerShape(50),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                ),
                 modifier = Modifier.weight(1f),
             )
             OrderFilter.entries.forEach { f ->
@@ -155,6 +171,12 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
                     selected = filter == f,
                     onClick = { filter = f },
                     label = { Text("${f.label} $count") },
+                    shape = RoundedCornerShape(50),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
                 )
             }
         }
@@ -193,9 +215,9 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
 
 @Composable
 private fun OrderCard(order: PurchaseOrder, onClick: () -> Unit) {
-    ElevatedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    SaitCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -221,7 +243,10 @@ private fun OrderCard(order: PurchaseOrder, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 6.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
             Row {
                 InfoItem("발주량", "${order.quantity} 개", Modifier.weight(1f))
                 InfoItem("발주일", order.orderDate.toString(), Modifier.weight(1f))

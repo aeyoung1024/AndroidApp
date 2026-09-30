@@ -3,24 +3,15 @@ package com.example.tabapp.ui.feature
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import com.example.tabapp.data.Feature
+import com.example.tabapp.ui.components.SaitTopBar
 import com.example.tabapp.ui.inbound.InboundOrderListScreen
 
-/** 모든 기능 화면이 공통으로 사용하는 상단바(뒤로가기 + 제목) 틀 */
-@OptIn(ExperimentalMaterial3Api::class)
+/** 모든 기능 화면이 공통으로 사용하는 틀 (상단바: 뒤로가기 + 제목 + SAIT 로고) */
 @Composable
 fun FeatureScaffold(
     feature: Feature,
@@ -28,20 +19,9 @@ fun FeatureScaffold(
     content: @Composable () -> Unit,
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(feature.title, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = feature.color,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                ),
-            )
+            SaitTopBar(title = feature.title, subtitle = feature.description, onBack = onBack)
         },
     ) { innerPadding ->
         Box(

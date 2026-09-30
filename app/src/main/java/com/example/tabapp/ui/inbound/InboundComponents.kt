@@ -8,11 +8,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.tabapp.data.inbound.OrderStatus
+import com.example.tabapp.ui.theme.SuccessGreen
+import com.example.tabapp.ui.theme.WarningOrange
 
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier = Modifier) {
@@ -34,10 +35,11 @@ fun InfoItem(label: String, value: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun StatusBadge(status: OrderStatus) {
-    val (bg, fg) = when (status) {
-        OrderStatus.PENDING -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        OrderStatus.COMPLETED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+    val fg = when (status) {
+        OrderStatus.PENDING -> WarningOrange
+        OrderStatus.COMPLETED -> SuccessGreen
     }
+    val bg = fg.copy(alpha = 0.12f)
     Surface(shape = RoundedCornerShape(50), color = bg) {
         Text(
             text = status.label,
