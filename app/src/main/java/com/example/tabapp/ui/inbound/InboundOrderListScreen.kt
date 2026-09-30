@@ -1,0 +1,173 @@
+package com.example.tabapp.ui.inbound
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.tabapp.data.inbound.InboundRepository
+import com.example.tabapp.data.inbound.OrderStatus
+import com.example.tabapp.data.inbound.PurchaseOrder
+
+enum class OrderFilter(val label: String, val status: OrderStatus?) {
+    PENDING("미입고", OrderStatus.PENDING),
+    COMPLETED("입고완료", OrderStatus.COMPLETED),
+    ALL("전체", null),
+}
+
+/** 입고 첫 화면: 발주 리스트. 항목을 누르면 입고 등록 화면으로 이동 */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
+    val orders by InboundRepository.orders.collectAsStateWithLifecycle()
+    var query by rememberSaveable { mutableStateOf("") }
+    var filter by rememberSaveable { mutableStateOf(OrderFilter.PENDING) }
+
+    val filtered = remember(orders, query, filter) {
+        val q = query.trim()
+        orders
+            .filter { filter.status == null || it.status == filter.status }
+            .filter { o ->
+                q.isEmpty() || listOf(o.orderNo, o.itemCode, o.itemName, o.supplier)
+                    .any { it.contains(q, ignoreCase = true) }
+            }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = { Text("발주번호, 품목, 거래처 검색") },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(Icons.Filled.Clear, contentDescription = "검색어 지우기")
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            OrderFilter.entries.forEach { f ->
+                val count = orders.count { f.status == null || it.status == f.status }
+                FilterChip(
+                    selected = filter == f,
+                    onClick = { filter = f },
+                    label = { Text("${f.label} $count") },
+                )
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "표시할 발주가 없습니다.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            // 가로(약 1280dp)에서는 3열, 세로(약 800dp)에서는 2열로 자동 배치
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 340.dp),
+                contentPadding = PaddingValues(bottom = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            ) {
+                items(filtered, key = { it.orderNo }) { order ->
+                    OrderCard(order = order, onClick = { onOrderSelected(order.orderNo) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OrderCard(order: PurchaseOrder, onClick: () -> Unit) {
+    ElevatedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = order.orderNo,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                StatusBadge(order.status)
+            }
+            Text(
+                text = order.itemName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${order.itemCode} · ${order.supplier}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Row {
+                InfoItem("발주량", "${order.quantity} 개", Modifier.weight(1f))
+                InfoItem("발주일", order.orderDate, Modifier.weight(1f))
+                InfoItem("납기일", order.dueDate, Modifier.weight(1f))
+            }
+        }
+    }
+}

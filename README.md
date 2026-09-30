@@ -11,6 +11,18 @@ Galaxy Tab Active3 용 Kotlin + Jetpack Compose 태블릿 앱.
   - 회전해도 입력값·로그인 상태 유지 (ViewModel / rememberSaveable)
 - 데모 계정: `admin` / `1234`
 
+## 입고
+1. **발주 리스트**: 검색(발주번호·품목·거래처), 미입고/입고완료/전체 필터
+2. 발주 선택 → **입고 등록** 화면에 발주량만큼 레코드 자동 생성
+3. 레코드마다 **입고 위치 → 실린더 번호**를 스캐너로 입력
+   - 스캔 값 끝의 Enter(또는 Tab)를 받으면 다음 빈 칸으로 자동 이동
+   - 실린더 번호 중복(같은 발주 내 / 이미 입고된 번호) 시 경고 후 다시 스캔
+   - "입고 위치 동일 적용" 스위치: 첫 위치를 나머지 레코드에 자동 입력 → 실린더만 연속 스캔
+4. 모든 레코드 입력 시 **입고 저장** → 발주 상태가 입고완료로 변경 (입고완료 발주는 조회만 가능)
+
+> 스캐너는 **키보드 입력 방식(HID / 키보드 웨지)** 으로 설정하고, 스캔 후 **Enter 접미사**를 붙이도록 설정하세요.
+> (삼성 Knox Capture 사용 시 "키 입력(Keystroke)" 출력 + Enter 접미사)
+
 ## 실행
 Android Studio 에서 이 폴더를 열고 Gradle Sync 후 ▶ Run.
 (최소 Android 8.0 / API 26, 대상 API 35)
@@ -19,7 +31,9 @@ Android Studio 에서 이 폴더를 열고 Gradle Sync 후 ▶ Run.
 | 내용 | 파일 |
 | --- | --- |
 | 6개 버튼 이름·아이콘·색상 | `app/src/main/java/com/example/tabapp/data/Feature.kt` |
-| 입고 화면 | `ui/feature/InboundScreen.kt` |
+| 입고 - 발주 리스트 | `ui/inbound/InboundOrderListScreen.kt` |
+| 입고 - 등록(스캔 입력) | `ui/inbound/InboundRegisterScreen.kt`, `InboundRegisterViewModel.kt` |
+| 입고 - 데이터(샘플 발주, 저장) | `data/inbound/InboundRepository.kt` |
 | 불출 화면 | `ui/feature/IssueScreen.kt` |
 | 이동 화면 | `ui/feature/TransferScreen.kt` |
 | 사외반출 화면 | `ui/feature/ExternalOutScreen.kt` |

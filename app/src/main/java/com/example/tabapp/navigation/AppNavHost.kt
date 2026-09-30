@@ -1,22 +1,30 @@
 package com.example.tabapp.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.tabapp.data.Feature
 import com.example.tabapp.ui.feature.FeatureScreen
+import com.example.tabapp.ui.inbound.ARG_ORDER_NO
+import com.example.tabapp.ui.inbound.InboundRegisterScreen
 import com.example.tabapp.ui.login.LoginScreen
 import com.example.tabapp.ui.main.MainScreen
 
 object Routes {
     const val LOGIN = "login"
     const val MAIN = "main"
+    const val INBOUND_REGISTER = "inbound/register/{$ARG_ORDER_NO}"
+
+    fun inboundRegister(orderNo: String) = "inbound/register/${Uri.encode(orderNo)}"
 }
 
 @Composable
@@ -57,14 +65,27 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             composable(feature.route) {
                 FeatureScreen(
                     feature = feature,
-                    onBack = {
-                        // 뒤로가기 버튼 연타 시 메인 화면까지 닫히지 않도록 현재 화면일 때만 처리
-                        if (navController.currentBackStackEntry?.destination?.route == feature.route) {
-                            navController.popBackStack()
-                        }
+                    onBack = { navController.popBackStackIfCurrent(feature.route) },
+                    onInboundOrderSelected = { orderNo ->
+                        navController.navigate(Routes.inboundRegister(orderNo)) { launchSingleTop = true }
                     },
                 )
             }
         }
+
+        // 입고 등록: 발주 리스트에서 선택한 발주의 레코드 입력 화면
+        composable(
+            route = Routes.INBOUND_REGISTER,
+            arguments = listOf(navArgument(ARG_ORDER_NO) { type = NavType.StringType }),
+        ) {
+            InboundRegisterScreen(
+                onBack = { navController.popBackStackIfCurrent(Routes.INBOUND_REGISTER) },
+            )
+        }
     }
+}
+
+/** 뒤로가기 버튼 연타 시 이전 화면까지 닫히지 않도록 현재 화면일 때만 뒤로 이동 */
+private fun NavHostController.popBackStackIfCurrent(route: String) {
+    if (currentBackStackEntry?.destination?.route == route) popBackStack()
 }
