@@ -1,5 +1,7 @@
 package com.example.tabapp.data.inbound
 
+import java.time.LocalDate
+
 enum class OrderStatus(val label: String) {
     PENDING("미입고"),
     COMPLETED("입고완료"),
@@ -12,8 +14,8 @@ data class PurchaseOrder(
     val itemCode: String,
     val itemName: String,
     val quantity: Int,
-    val orderDate: String,
-    val dueDate: String,
+    val orderDate: LocalDate,
+    val dueDate: LocalDate,
     val status: OrderStatus = OrderStatus.PENDING,
 )
 

@@ -264,8 +264,8 @@ private fun OrderInfoPanel(
         "품목코드" to order.itemCode,
         "거래처" to order.supplier,
         "발주량" to "${order.quantity} 개",
-        "발주일" to order.orderDate,
-        "납기일" to order.dueDate,
+        "발주일" to order.orderDate.toString(),
+        "납기일" to order.dueDate.toString(),
         "상태" to order.status.label,
     )
 

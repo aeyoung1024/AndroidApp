@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.time.LocalDate
 
 /**
  * 발주/입고 데이터 저장소.
@@ -18,7 +19,7 @@ object InboundRepository {
 
     /** 발주번호 → 입고된 레코드 */
     private val inboundRecords = mutableMapOf(
-        "PO-20260920-006" to listOf(
+        "PO-006" to listOf(
             InboundRecord(1, "A-01-01", "CYL-O2-100231"),
             InboundRecord(2, "A-01-01", "CYL-O2-100232"),
             InboundRecord(3, "A-01-02", "CYL-O2-100233"),
@@ -41,15 +42,31 @@ object InboundRepository {
         }
     }
 
-    private fun sampleOrders() = listOf(
-        PurchaseOrder("PO-20260925-001", "대한가스", "GAS-O2-47", "산소 47L", 10, "2026-09-25", "2026-10-02"),
-        PurchaseOrder("PO-20260926-002", "한국특수가스", "GAS-N2-47", "질소 47L", 5, "2026-09-26", "2026-10-03"),
-        PurchaseOrder("PO-20260927-003", "대한가스", "GAS-AR-47", "아르곤 47L", 8, "2026-09-27", "2026-10-04"),
-        PurchaseOrder("PO-20260928-004", "서울산업가스", "GAS-CO2-20", "이산화탄소 20kg", 4, "2026-09-28", "2026-10-05"),
-        PurchaseOrder("PO-20260929-005", "한국특수가스", "GAS-HE-47", "헬륨 47L", 3, "2026-09-29", "2026-10-06"),
-        PurchaseOrder(
-            "PO-20260920-006", "서울산업가스", "GAS-O2-47", "산소 47L", 3, "2026-09-20", "2026-09-27",
-            status = OrderStatus.COMPLETED,
-        ),
-    )
+    /** 샘플 발주: 조회 기간 확인용으로 오늘 기준 여러 시점의 발주를 생성 */
+    private fun sampleOrders(): List<PurchaseOrder> {
+        val today = LocalDate.now()
+        fun order(
+            no: String, supplier: String, code: String, name: String, qty: Int, daysAgo: Long,
+            status: OrderStatus = OrderStatus.PENDING,
+        ) = PurchaseOrder(
+            orderNo = no,
+            supplier = supplier,
+            itemCode = code,
+            itemName = name,
+            quantity = qty,
+            orderDate = today.minusDays(daysAgo),
+            dueDate = today.minusDays(daysAgo).plusDays(7),
+            status = status,
+        )
+        return listOf(
+            order("PO-001", "대한가스", "GAS-O2-47", "산소 47L", 10, daysAgo = 2),
+            order("PO-002", "한국특수가스", "GAS-N2-47", "질소 47L", 5, daysAgo = 7),
+            order("PO-003", "대한가스", "GAS-AR-47", "아르곤 47L", 8, daysAgo = 20),
+            order("PO-004", "서울산업가스", "GAS-CO2-20", "이산화탄소 20kg", 4, daysAgo = 50),
+            order("PO-005", "한국특수가스", "GAS-HE-47", "헬륨 47L", 3, daysAgo = 120),
+            order("PO-006", "서울산업가스", "GAS-O2-47", "산소 47L", 3, daysAgo = 10, status = OrderStatus.COMPLETED),
+            order("PO-007", "대한가스", "GAS-N2-47", "질소 47L", 6, daysAgo = 250),
+            order("PO-008", "서울산업가스", "GAS-AR-47", "아르곤 47L", 2, daysAgo = 420),
+        )
+    }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -22,6 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +42,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.tabapp.data.inbound.InboundRepository
 import com.example.tabapp.data.inbound.OrderStatus
 import com.example.tabapp.data.inbound.PurchaseOrder
+import java.time.LocalDate
+
+/** 발주 리스트 조회 기간 (발주일 기준) */
+enum class OrderPeriod(val label: String, val months: Long?) {
+    ONE_MONTH("1개월", 1),
+    THREE_MONTHS("3개월", 3),
+    SIX_MONTHS("6개월", 6),
+    OVER_ONE_YEAR("1년 이상", null), // 기간 제한 없이 1년 이상 지난 발주까지 모두 조회
+
+    ;
+
+    /** 조회 시작일. null 이면 제한 없음 */
+    fun startDate(today: LocalDate): LocalDate? = months?.let { today.minusMonths(it) }
+}
 
 enum class OrderFilter(val label: String, val status: OrderStatus?) {
     PENDING("미입고", OrderStatus.PENDING),
@@ -52,10 +70,20 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
     val orders by InboundRepository.orders.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(OrderFilter.PENDING) }
+    var period by rememberSaveable { mutableStateOf(OrderPeriod.ONE_MONTH) }
 
-    val filtered = remember(orders, query, filter) {
-        val q = query.trim()
+    val today = remember { LocalDate.now() }
+    val startDate = period.startDate(today)
+
+    // 조회 기간 내 발주 (최신 발주일 순)
+    val periodOrders = remember(orders, startDate) {
         orders
+            .filter { startDate == null || !it.orderDate.isBefore(startDate) }
+            .sortedByDescending { it.orderDate }
+    }
+    val filtered = remember(periodOrders, query, filter) {
+        val q = query.trim()
+        periodOrders
             .filter { filter.status == null || it.status == filter.status }
             .filter { o ->
                 q.isEmpty() || listOf(o.orderNo, o.itemCode, o.itemName, o.supplier)
@@ -68,6 +96,37 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
             .fillMaxSize()
             .padding(horizontal = 20.dp),
     ) {
+        // 상단: 조회 기간 선택
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = "조회 기간",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.widthIn(min = 360.dp)) {
+                OrderPeriod.entries.forEachIndexed { index, p ->
+                    SegmentedButton(
+                        selected = period == p,
+                        onClick = { period = p },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = OrderPeriod.entries.size),
+                    ) {
+                        Text(p.label)
+                    }
+                }
+            }
+            Text(
+                text = if (startDate == null) "전체 기간" else "$startDate ~ $today",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,7 +150,7 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
                 modifier = Modifier.weight(1f),
             )
             OrderFilter.entries.forEach { f ->
-                val count = orders.count { f.status == null || it.status == f.status }
+                val count = periodOrders.count { f.status == null || it.status == f.status }
                 FilterChip(
                     selected = filter == f,
                     onClick = { filter = f },
@@ -108,7 +167,7 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "표시할 발주가 없습니다.",
+                    text = "조회 기간 내 표시할 발주가 없습니다.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -165,8 +224,8 @@ private fun OrderCard(order: PurchaseOrder, onClick: () -> Unit) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Row {
                 InfoItem("발주량", "${order.quantity} 개", Modifier.weight(1f))
-                InfoItem("발주일", order.orderDate, Modifier.weight(1f))
-                InfoItem("납기일", order.dueDate, Modifier.weight(1f))
+                InfoItem("발주일", order.orderDate.toString(), Modifier.weight(1f))
+                InfoItem("납기일", order.dueDate.toString(), Modifier.weight(1f))
             }
         }
     }
