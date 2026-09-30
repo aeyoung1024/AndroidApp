@@ -113,7 +113,9 @@ fun InboundRegisterScreen(
     }
 
     Scaffold(
-        modifier = Modifier.imePadding(),
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
+            .imePadding(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SaitTopBar(
@@ -162,7 +164,7 @@ fun InboundRegisterScreen(
                     onSameLocationChange = viewModel::setSameLocation,
                     landscape = true,
                     modifier = Modifier
-                        .width(320.dp)
+                        .width(300.dp)
                         .fillMaxHeight(),
                 )
                 RecordTable(
@@ -246,7 +248,6 @@ private fun OrderInfoPanel(
     modifier: Modifier = Modifier,
 ) {
     val items = listOf(
-        "품목코드" to order.itemCode,
         "거래처" to order.supplier,
         "발주량" to "${order.quantity} 개",
         "발주일" to order.orderDate.display(),
@@ -259,23 +260,20 @@ private fun OrderInfoPanel(
             modifier = Modifier
                 .padding(20.dp)
                 .then(if (landscape) Modifier.verticalScroll(rememberScrollState()) else Modifier),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(order.itemName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
-                text = order.orderNo,
+                text = "${order.orderNo}  ·  ${order.itemCode}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            if (landscape) {
-                items.forEach { (label, value) -> InfoItem(label, value) }
-            } else {
-                items.chunked(3).forEach { rowItems ->
-                    Row {
-                        rowItems.forEach { (label, value) -> InfoItem(label, value, Modifier.weight(1f)) }
-                    }
+            // 가로: 2열 x 3행, 세로: 3열 x 2행
+            items.chunked(if (landscape) 2 else 3).forEach { rowItems ->
+                Row {
+                    rowItems.forEach { (label, value) -> InfoItem(label, value, Modifier.weight(1f)) }
                 }
             }
 

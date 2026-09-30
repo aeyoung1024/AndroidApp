@@ -76,6 +76,7 @@ enum class OrderFilter(val label: String, val status: OrderStatus?) {
 /** 이 너비 이상이면 표(테이블) 형태, 미만이면 2줄 목록 형태 */
 private val WideLayoutMinWidth = 760.dp
 private val ToolbarHeight = 44.dp
+private val PeriodSelectorWidth = 384.dp
 
 /** 입고 첫 화면: 발주 리스트. 항목을 누르면 입고 등록 화면으로 이동 */
 @Composable
@@ -111,7 +112,7 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
     ) {
         val wide = maxWidth >= WideLayoutMinWidth
 
@@ -199,7 +200,12 @@ fun InboundOrderListScreen(onOrderSelected: (String) -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PeriodSelector(period: OrderPeriod, onSelect: (OrderPeriod) -> Unit) {
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.height(ToolbarHeight)) {
+    // 버튼 4개가 같은 너비로, 글자가 줄바꿈되지 않도록 충분한 폭을 줌
+    SingleChoiceSegmentedButtonRow(
+        modifier = Modifier
+            .height(ToolbarHeight)
+            .width(PeriodSelectorWidth),
+    ) {
         OrderPeriod.entries.forEachIndexed { index, p ->
             SegmentedButton(
                 selected = period == p,
@@ -215,7 +221,12 @@ private fun PeriodSelector(period: OrderPeriod, onSelect: (OrderPeriod) -> Unit)
                     inactiveBorderColor = MaterialTheme.colorScheme.outlineVariant,
                 ),
             ) {
-                Text(p.label, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = p.label,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    softWrap = false,
+                )
             }
         }
     }
@@ -327,11 +338,12 @@ private fun StatusTabs(
 // ───────────────────────── 목록 ─────────────────────────
 
 // 표 열 너비 비율 (헤더와 행이 같은 값을 사용해 세로 정렬을 맞춤)
-private const val W_ITEM = 2.6f
+private const val W_ITEM = 2.4f
 private const val W_SUPPLIER = 1.5f
-private const val W_QTY = 0.9f
-private const val W_DATE = 1.2f
+private const val W_QTY = 0.8f
+private const val W_DATE = 1.3f
 private const val W_STATUS = 1.1f
+private val CellGap = 8.dp // 열 사이 여백
 private val ChevronWidth = 24.dp
 
 @Composable
@@ -340,12 +352,12 @@ private fun TableHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         HeaderCell("품목 / 발주번호", W_ITEM)
         HeaderCell("거래처", W_SUPPLIER)
-        HeaderCell("발주량", W_QTY, TextAlign.End)
+        HeaderCell("발주량", W_QTY, TextAlign.Center)
         HeaderCell("발주일", W_DATE, TextAlign.Center)
         HeaderCell("납기일", W_DATE, TextAlign.Center)
         HeaderCell("상태", W_STATUS, TextAlign.Center)
@@ -360,7 +372,10 @@ private fun RowScope.HeaderCell(text: String, weight: Float, align: TextAlign = 
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = align,
-        modifier = Modifier.weight(weight),
+        maxLines = 1,
+        modifier = Modifier
+            .weight(weight)
+            .padding(horizontal = CellGap),
     )
 }
 
@@ -370,10 +385,14 @@ private fun WideOrderRow(order: PurchaseOrder, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 12.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(W_ITEM)) {
+        Column(
+            modifier = Modifier
+                .weight(W_ITEM)
+                .padding(horizontal = CellGap),
+        ) {
             Text(
                 text = order.itemName,
                 style = MaterialTheme.typography.titleMedium,
@@ -392,8 +411,10 @@ private fun WideOrderRow(order: PurchaseOrder, onClick: () -> Unit) {
         Text(
             text = "${order.quantity}",
             style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(W_QTY),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .weight(W_QTY)
+                .padding(horizontal = CellGap),
         )
         BodyCell(order.orderDate.display(), W_DATE, TextAlign.Center)
         BodyCell(order.dueDate.display(), W_DATE, TextAlign.Center)
@@ -412,7 +433,9 @@ private fun RowScope.BodyCell(text: String, weight: Float, align: TextAlign = Te
         textAlign = align,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.weight(weight),
+        modifier = Modifier
+            .weight(weight)
+            .padding(horizontal = CellGap),
     )
 }
 
